@@ -2,8 +2,7 @@ databases:
   - name: applyflow-db
     databaseName: applyflow
     region: singapore
-    plan: 0.1c-256mb
-    diskSizeGB: 1
+    plan: free
 
 services:
   - type: web
@@ -11,14 +10,10 @@ services:
     runtime: python
     rootDir: backend
     region: singapore
-    plan: 0.5c-512mb
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
-    disk:
-      name: applyflow-uploads
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -28,15 +23,7 @@ services:
         generateValue: true
       - key: APP_ENV
         value: production
-      - key: UPLOAD_DIR
-        value: /var/data/uploads
       - key: USE_MOCK_AI
         value: "true"
       - key: USE_MOCK_JOBS
         value: "true"
-      - key: BREVO_API_KEY
-        sync: false
-      - key: BREVO_SENDER_EMAIL
-        sync: false
-      - key: FRONTEND_BASE_URL
-        sync: false

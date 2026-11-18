@@ -38,7 +38,7 @@ services:
       - key: APP_ENV
         value: production
       - key: CORS_ORIGINS
-        value: '["https://applyflow-web.onrender.com", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]'
+        value: '["https://applyflow-web-51ko.onrender.com", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]'
       - key: USE_MOCK_AI
         value: "true"
       - key: USE_MOCK_JOBS

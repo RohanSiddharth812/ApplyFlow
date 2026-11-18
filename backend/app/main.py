@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
 from sqlalchemy import inspect, text
@@ -43,9 +42,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Static files for resume uploads
+# Keep uploaded resumes private; they are stored on the persistent disk and are
+# not exposed as unauthenticated static files.
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 # Include Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR)

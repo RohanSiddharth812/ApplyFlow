@@ -2,12 +2,26 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
+import asyncio
+import logging
 from sqlalchemy import inspect, text
 
 from app.core.config import settings
 from app.database.connection import engine, Base, SessionLocal
 from app.database.seed_data import seed_database
 from app.api import auth, profile, resumes, jobs, applications, learning, interviews, analytics
+from app.services.jobs.feed_sync import sync_job_boards
+
+logger = logging.getLogger(__name__)
+
+async def refresh_job_boards():
+    while True:
+        await asyncio.sleep(6 * 60 * 60)
+        try:
+            result = await asyncio.to_thread(sync_job_boards)
+            logger.info("Employer board refresh completed: %s", result)
+        except Exception:
+            logger.exception("Employer board refresh failed")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,7 +38,16 @@ async def lifespan(app: FastAPI):
         seed_database(db)
     finally:
         db.close()
+    # Refresh once at startup and then every six hours. Feed failures are logged
+    # per board and do not prevent the API from starting.
+    await asyncio.to_thread(sync_job_boards)
+    refresh_task = asyncio.create_task(refresh_job_boards())
     yield
+    refresh_task.cancel()
+    try:
+        await refresh_task
+    except asyncio.CancelledError:
+        pass
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

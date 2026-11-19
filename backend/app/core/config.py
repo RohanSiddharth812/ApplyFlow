@@ -12,7 +12,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api"
     APP_ENV: str = "development"
     
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "super-secret-jobmate-key-change-in-production-2026")
+    # Must be provided through the environment (Render supplies a generated value).
+    # There is deliberately no public, predictable development fallback.
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
@@ -34,6 +36,8 @@ class Settings(BaseSettings):
     
     # Mock Jobs
     USE_MOCK_JOBS: bool = os.getenv("USE_MOCK_JOBS", "true").lower() in ("true", "1", "yes")
+    # JSON array: [{"provider":"greenhouse","token":"company-board","company":"Company"}]
+    JOB_BOARDS: str = "[]"
     
     # Upload storage
     UPLOAD_DIR: str = str(BASE_DIR / "uploads")

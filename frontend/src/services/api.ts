@@ -154,6 +154,7 @@ class ApiClient {
     query?: string;
     role?: string;
     location?: string;
+    india_only?: boolean;
     experience?: string;
     tab?: string;
   } = {}): Promise<Job[]> {
@@ -161,6 +162,7 @@ class ApiClient {
     if (params.query) searchParams.append('query', params.query);
     if (params.role) searchParams.append('role', params.role);
     if (params.location) searchParams.append('location', params.location);
+    if (params.india_only !== undefined) searchParams.append('india_only', String(params.india_only));
     if (params.experience) searchParams.append('experience', params.experience);
     if (params.tab) searchParams.append('tab', params.tab);
 

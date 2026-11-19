@@ -10,11 +10,32 @@ from app.services.ai.job_matcher import calculate_job_match
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
+LOCATION_ALIASES = {
+    "bangalore": ("bangalore", "bengaluru"),
+    "bengaluru": ("bangalore", "bengaluru"),
+    "gurgaon": ("gurgaon", "gurugram"),
+    "gurugram": ("gurgaon", "gurugram"),
+    "cochin": ("cochin", "kochi"),
+    "kochi": ("cochin", "kochi"),
+    "mysore": ("mysore", "mysuru"),
+    "mysuru": ("mysore", "mysuru"),
+    "delhi ncr": ("delhi", "gurugram", "gurgaon", "noida", "faridabad"),
+}
+
+INDIA_LOCATION_TERMS = (
+    "India", "Ahmedabad", "Bengaluru", "Bangalore", "Bhubaneswar", "Chandigarh",
+    "Chennai", "Coimbatore", "Delhi", "Faridabad", "Gurugram", "Gurgaon",
+    "Guwahati", "Hyderabad", "Indore", "Jaipur", "Kochi", "Cochin", "Kolkata",
+    "Lucknow", "Mumbai", "Mysuru", "Mysore", "Noida", "Pune", "Thiruvananthapuram",
+    "Visakhapatnam",
+)
+
 @router.get("", response_model=List[JobResponse])
 def list_jobs(
     query: Optional[str] = None,
     role: Optional[str] = None,
     location: Optional[str] = None,
+    india_only: bool = False,
     experience: Optional[str] = None,
     employment_type: Optional[str] = None,
     is_remote: Optional[bool] = None,
@@ -40,8 +61,12 @@ def list_jobs(
     if role and role != "All":
         q = q.filter(Job.title.ilike(f"%{role}%"))
     
+    if india_only:
+        q = q.filter(or_(*(Job.location.ilike(f"%{place}%") for place in INDIA_LOCATION_TERMS)))
+
     if location and location != "All":
-        q = q.filter(Job.location.ilike(f"%{location}%"))
+        aliases = LOCATION_ALIASES.get(location.strip().lower(), (location.strip(),))
+        q = q.filter(or_(*(Job.location.ilike(f"%{place}%") for place in aliases)))
         
     if experience and experience != "All":
         q = q.filter(Job.experience_level.ilike(f"%{experience}%"))

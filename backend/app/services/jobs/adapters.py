@@ -37,7 +37,7 @@ class BoardAdapter:
     def source_name(self) -> str:
         return f"{self.provider.title()} / {self.token}"
 
-    def fetch_jobs(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def fetch_jobs(self, limit: int = 500) -> List[Dict[str, Any]]:
         if self.provider == "greenhouse":
             return self._greenhouse(limit)
         if self.provider == "lever":
@@ -72,15 +72,25 @@ class BoardAdapter:
         return [job for job in jobs if job["url"]]
 
     def _lever(self, limit: int) -> List[Dict[str, Any]]:
-        response = httpx.get(
-            f"https://api.lever.co/v0/postings/{self.token}",
-            params={"mode": "json"}, timeout=20,
-        )
-        response.raise_for_status()
+        rows = []
+        while len(rows) < limit:
+            page_size = min(100, limit - len(rows))
+            response = httpx.get(
+                f"https://api.lever.co/v0/postings/{self.token}",
+                params={"mode": "json", "skip": len(rows), "limit": page_size}, timeout=20,
+            )
+            response.raise_for_status()
+            page = response.json()
+            rows.extend(page)
+            if len(page) < page_size:
+                break
         jobs = []
-        for row in response.json()[:limit]:
+        for row in rows[:limit]:
             categories = row.get("categories") or {}
             location = categories.get("location") or "Not specified"
+            country = str(row.get("country") or "").upper()
+            if country == "IN" and "india" not in location.lower():
+                location = f"{location}, India"
             commitment = categories.get("commitment") or ""
             jobs.append({
                 "external_id": str(row["id"]), "title": row.get("text") or "Role",
@@ -91,5 +101,6 @@ class BoardAdapter:
                 if row.get("createdAt") else "Recently",
                 "employment_type": _employment_type(commitment),
                 "is_remote": "remote" in (location + " " + str(categories.get("workplaceType", ""))).lower(),
+                "country": country,
             })
         return [job for job in jobs if job["url"]]

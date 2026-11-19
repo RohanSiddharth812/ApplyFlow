@@ -13,6 +13,21 @@ from app.services.jobs.adapters import BoardAdapter
 
 logger = logging.getLogger(__name__)
 
+INDIA_LOCATION_TERMS = (
+    "india", "ahmedabad", "bengaluru", "bangalore", "bhubaneswar", "chandigarh",
+    "chennai", "coimbatore", "delhi", "faridabad", "gurugram", "gurgaon",
+    "guwahati", "hyderabad", "indore", "jaipur", "kochi", "cochin", "kolkata",
+    "lucknow", "mumbai", "mysuru", "mysore", "noida", "pune", "thiruvananthapuram",
+    "visakhapatnam",
+)
+
+
+def _is_india_listing(job: Dict[str, Any]) -> bool:
+    if str(job.get("country") or "").upper() == "IN":
+        return True
+    location = str(job.get("location") or "").lower()
+    return any(term in location for term in INDIA_LOCATION_TERMS)
+
 
 def configured_boards() -> List[Dict[str, Any]]:
     try:
@@ -36,6 +51,8 @@ def configured_boards() -> List[Dict[str, Any]]:
 def _sync_board(db: Session, board: Dict[str, Any]) -> int:
     adapter = BoardAdapter(board)
     jobs = adapter.fetch_jobs()
+    if settings.JOB_COUNTRY.upper() == "IN":
+        jobs = [item for item in jobs if _is_india_listing(item)]
     seen_ids = set()
     for item in jobs:
         external_id = item["external_id"]

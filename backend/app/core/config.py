@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     USE_MOCK_JOBS: bool = os.getenv("USE_MOCK_JOBS", "true").lower() in ("true", "1", "yes")
     # JSON array: [{"provider":"greenhouse","token":"company-board","company":"Company"}]
     JOB_BOARDS: str = "[]"
+    # Set to IN to store India-only listings; ALL keeps additional markets available.
+    JOB_COUNTRY: str = "ALL"
     
     # Upload storage
     UPLOAD_DIR: str = str(BASE_DIR / "uploads")

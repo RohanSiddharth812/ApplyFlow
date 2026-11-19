@@ -4,12 +4,20 @@ import { Search, Bookmark, MapPin, Briefcase, Clock, Sparkles, Filter } from 'lu
 import { Job } from '../types';
 import { api } from '../services/api';
 
+const INDIA_LOCATION_SUGGESTIONS = [
+  'Ahmedabad', 'Bengaluru', 'Bangalore', 'Bhubaneswar', 'Chandigarh', 'Chennai',
+  'Coimbatore', 'Delhi NCR', 'Gurugram', 'Gurgaon', 'Guwahati', 'Hyderabad',
+  'Indore', 'Jaipur', 'Kochi', 'Kolkata', 'Lucknow', 'Mumbai', 'Mysuru',
+  'Noida', 'Pune', 'Thiruvananthapuram', 'Visakhapatnam', 'Remote',
+];
+
 export const JobsPage: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('All');
   const [selectedLocation, setSelectedLocation] = useState('All');
+  const [indiaOnly, setIndiaOnly] = useState(true);
   const [selectedExperience, setSelectedExperience] = useState('All');
   const [activeTab, setActiveTab] = useState<'all' | 'recommended' | 'internships' | 'saved'>('all');
 
@@ -22,6 +30,7 @@ export const JobsPage: React.FC = () => {
         query: query || undefined,
         role: selectedRole !== 'All' ? selectedRole : undefined,
         location: selectedLocation !== 'All' ? selectedLocation : undefined,
+        india_only: indiaOnly,
         experience: selectedExperience !== 'All' ? selectedExperience : undefined,
         tab: activeTab,
       });
@@ -35,7 +44,7 @@ export const JobsPage: React.FC = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [activeTab, selectedRole, selectedLocation, selectedExperience]);
+  }, [activeTab, selectedRole, selectedLocation, indiaOnly, selectedExperience]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,16 +98,17 @@ export const JobsPage: React.FC = () => {
 
           <div>
             <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Location</label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
+            <input
+              list="india-location-suggestions"
+              value={selectedLocation === 'All' ? '' : selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value || 'All')}
+              placeholder="Any Indian city"
+              aria-label="Filter jobs by location"
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-niagara"
-            >
-              <option value="All">All Locations</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="Bengaluru">Bengaluru</option>
-              <option value="Remote">Remote</option>
-            </select>
+            />
+            <datalist id="india-location-suggestions">
+              {INDIA_LOCATION_SUGGESTIONS.map((place) => <option key={place} value={place} />)}
+            </datalist>
           </div>
 
           <div>
@@ -126,6 +136,16 @@ export const JobsPage: React.FC = () => {
             </button>
           </div>
         </div>
+        <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+          <input
+            type="checkbox"
+            checked={indiaOnly}
+            onChange={(e) => setIndiaOnly(e.target.checked)}
+            className="rounded border-slate-300 text-niagara focus:ring-niagara"
+          />
+          India-based jobs only
+          <span className="font-normal text-slate-400">(includes remote roles marked for India)</span>
+        </label>
       </div>
 
       {/* Tabs Row matching Reference #5 */}
